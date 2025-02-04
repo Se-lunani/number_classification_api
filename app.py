@@ -4,36 +4,52 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+# Function to check if a number is Armstrong
+def is_armstrong(number):
+    digits = str(abs(number))  # Convert number to string to process each digit
+    num_digits = len(digits)
+    sum_of_powers = sum(int(digit) ** num_digits for digit in digits)
+    return sum_of_powers == abs(number)
+
+# Function to check if a number is prime
+def is_prime(number):
+    if abs(number) < 2:
+        return False
+    for i in range(2, int(abs(number) ** 0.5) + 1):
+        if abs(number) % i == 0:
+            return False
+    return True
+
 @app.route('/api/classify-number', methods=['GET'])
 def classify_number():
     number = request.args.get('number')
 
-    # Check if the number is a valid number (integer or float)
+    # Try to convert to a float (to allow negative and float numbers)
     try:
-        number = float(number)  # Try to convert to a float
+        number = float(number)  # Convert to float for handling both integers and floats
     except ValueError:
-        return jsonify({"error": True, "message": "Invalid number"}), 400
+        return jsonify({"number": number, "error": True, "message": "Invalid number"}), 400
 
-    # If the number is valid, continue with processing
-    # Add your logic here to classify the number and return a response
-    is_prime = False  # You can add your logic for prime check
-    is_perfect = False  # You can add your logic for perfect number check
+    # Initialize properties list
     properties = []
-    digit_sum = sum(int(digit) for digit in str(abs(number)) if digit.isdigit())
 
+    # Check for Armstrong number
+    if is_armstrong(number):
+        properties.append("armstrong")
+
+    # Check if the number is odd or even
     if number % 2 != 0:
         properties.append("odd")
     else:
         properties.append("even")
-    
-    # Add additional checks for Armstrong numbers or other properties
-    # Example response
+
+    # Generate response with the requested structure
     return jsonify({
         "number": number,
-        "is_prime": is_prime,
-        "is_perfect": is_perfect,
-        "properties": properties,
-        "digit_sum": digit_sum,
+        "is_prime": is_prime(number),
+        "is_perfect": False,  # Not implementing perfect number logic, adjust if needed
+        "properties": properties,  # Only "armstrong", "odd", or "even"
+        "digit_sum": sum(int(digit) for digit in str(abs(number)) if digit.isdigit()),
         "fun_fact": f"Fun fact about {number}"
     })
 
