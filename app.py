@@ -40,9 +40,9 @@ def classify_number():
     # Check if the number is odd or even
     if number % 2 != 0:
         properties.append("odd")
-    else:
+    elif number % 2 == 0:
         properties.append("even")
-    
+
     # Calculate the digit sum (ignoring the decimal point if float)
     digit_sum = sum(int(digit) for digit in str(abs(number)) if digit.isdigit())
 
