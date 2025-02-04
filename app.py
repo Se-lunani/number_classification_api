@@ -4,58 +4,70 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-# Function to check if a number is Armstrong
 def is_armstrong(number):
-    digits = str(abs(number))  # Convert number to string to process each digit
+    # Ensure the number is an integer
+    if not isinstance(number, int):
+        return False
+    digits = str(abs(number))
     num_digits = len(digits)
-    sum_of_powers = sum(int(digit) ** num_digits for digit in digits if digit.isdigit())  # Ensure we only process digits
+    sum_of_powers = sum(int(digit) ** num_digits for digit in digits)
     return sum_of_powers == abs(number)
 
-# Function to check if a number is prime
 def is_prime(number):
-    if abs(number) < 2:
+    # Handle both integer and float inputs
+    if isinstance(number, float):
+        if not number.is_integer():
+            return False
+        number = int(number)
+    number = abs(number)
+    if number < 2:
         return False
-    for i in range(2, int(abs(number) ** 0.5) + 1):
-        if abs(number) % i == 0:
+    for i in range(2, int(number ** 0.5) + 1):
+        if number % i == 0:
             return False
     return True
 
 @app.route('/api/classify-number', methods=['GET'])
 def classify_number():
-    number = request.args.get('number')
+    number_input = request.args.get('number')
 
-    # Try to convert to a float (to allow negative and float numbers)
+    # Validate and convert input
     try:
-        number = float(number)  # Convert to float for handling both integers and floats
+        number_float = float(number_input)
     except ValueError:
-        return jsonify({"error": True, "message": "Invalid number"}), 400
+        # Return original invalid input in 'number' field
+        return jsonify({
+            "error": True,
+            "message": "Invalid number",
+            "number": number_input  # Include original input
+        }), 400
 
-    # Initialize properties list
     properties = []
+    is_integer = number_float.is_integer()
+    number_int = int(number_float) if is_integer else None
 
-    # Check for Armstrong number
-    if is_armstrong(number):
+    # Check Armstrong (only for integers)
+    if is_integer and is_armstrong(number_int):
         properties.append("armstrong")
 
-    # Check if the number is odd or even
-    if number % 2 != 0:
-        properties.append("odd")
-    else:
-        properties.append("even")
+    # Check Odd/Even (only for integers)
+    if is_integer:
+        properties.append("odd" if number_int % 2 != 0 else "even")
 
-    # Calculate the sum of digits
-    # This will ignore the decimal point and only sum digits
-    number_str = str(abs(number)).replace('.', '')  # Remove the decimal point
+    # Sum of digits (ignore decimal points)
+    number_str = str(abs(number_float)).replace('.', '')
     digit_sum = sum(int(digit) for digit in number_str if digit.isdigit())
 
-    # Example response with the requested structure
+    # Prime check (handled in is_prime)
+    prime_check = is_prime(number_float)
+
     return jsonify({
-        "number": number,
-        "is_prime": is_prime(number),
-        "is_perfect": False,  # Not implementing perfect number logic, adjust if needed
+        "number": number_float,
+        "is_prime": prime_check,
+        "is_perfect": False,  # Placeholder as per original code
         "properties": properties,
         "digit_sum": digit_sum,
-        "fun_fact": f"Fun fact about {number}"
+        "fun_fact": f"Fun fact about {number_float}"
     })
 
 if __name__ == '__main__':
