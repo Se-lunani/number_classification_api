@@ -6,7 +6,7 @@ CORS(app)
 
 # Function to check if a number is Armstrong
 def is_armstrong(number):
-    digits = str(abs(number))  # Convert number to string to process each digit
+    digits = str(abs(number)).replace('.', '')  # Remove the decimal point
     num_digits = len(digits)
     sum_of_powers = sum(int(digit) ** num_digits for digit in digits)
     return sum_of_powers == abs(number)
@@ -24,9 +24,9 @@ def is_prime(number):
 def classify_number():
     number = request.args.get('number')
 
-    # Try to convert to a float (to allow negative and float numbers)
+    # Check if the number is a valid number (integer or float)
     try:
-        number = float(number)  # Convert to float for handling both integers and floats
+        number = float(number)  # Try to convert to a float
     except ValueError:
         return jsonify({"number": number, "error": True, "message": "Invalid number"}), 400
 
@@ -42,16 +42,21 @@ def classify_number():
         properties.append("odd")
     else:
         properties.append("even")
+    
+    # Calculate the digit sum (ignoring the decimal point if float)
+    digit_sum = sum(int(digit) for digit in str(abs(number)) if digit.isdigit())
 
-    # Generate response with the requested structure
-    return jsonify({
+    # Example response with the requested structure
+    response = {
         "number": number,
         "is_prime": is_prime(number),
         "is_perfect": False,  # Not implementing perfect number logic, adjust if needed
         "properties": properties,  # Only "armstrong", "odd", or "even"
-        "digit_sum": sum(int(digit) for digit in str(abs(number)) if digit.isdigit()),
+        "digit_sum": digit_sum,
         "fun_fact": f"Fun fact about {number}"
-    })
+    }
+
+    return jsonify(response)
 
 if __name__ == '__main__':
     app.run(debug=True)
