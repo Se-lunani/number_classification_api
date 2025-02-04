@@ -1,59 +1,41 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-import requests
-
 app = Flask(__name__)
 CORS(app)
-
-
-def is_prime(n):
-    if n < 2:
-        return False
-    for i in range(2, int(n**0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
-
-def is_perfect(n):
-    return sum([i for i in range(1, n) if n % i == 0]) == n
-
-def is_armstrong(n):
-    digits = list(map(int, str(n)))
-    power = len(digits)
-    return sum(d**power for d in digits) == n
-
-def get_fun_fact(n):
-    response = requests.get(f"http://numbersapi.com/{n}")
-    return response.text if response.status_code == 200 else "No fun fact available."
 
 @app.route('/api/classify-number', methods=['GET'])
 def classify_number():
     number = request.args.get('number')
 
-    if not number or not number.isdigit():
-        return jsonify({"number": number, "error": True}), 400
+    # Check if the number is a valid number (integer or float)
+    try:
+        number = float(number)  # Try to convert to a float
+    except ValueError:
+        return jsonify({"error": True, "message": "Invalid number"}), 400
 
-    num = int(number)
-    properties = ["odd" if num % 2 else "even"]
+    # If the number is valid, continue with processing
+    # Add your logic here to classify the number and return a response
+    is_prime = False  # You can add your logic for prime check
+    is_perfect = False  # You can add your logic for perfect number check
+    properties = []
+    digit_sum = sum(int(digit) for digit in str(abs(number)) if digit.isdigit())
+
+    if number % 2 != 0:
+        properties.append("odd")
+    else:
+        properties.append("even")
     
-    if is_prime(num):
-        properties.append("prime")
-    if is_perfect(num):
-        properties.append("perfect")
-    if is_armstrong(num):
-        properties.append("armstrong")
-
-    response = {
-        "number": num,
-        "is_prime": is_prime(num),
-        "is_perfect": is_perfect(num),
+    # Add additional checks for Armstrong numbers or other properties
+    # Example response
+    return jsonify({
+        "number": number,
+        "is_prime": is_prime,
+        "is_perfect": is_perfect,
         "properties": properties,
-        "digit_sum": sum(map(int, str(num))),
-        "fun_fact": get_fun_fact(num),
-    }
-
-    return jsonify(response)
+        "digit_sum": digit_sum,
+        "fun_fact": f"Fun fact about {number}"
+    })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True)
